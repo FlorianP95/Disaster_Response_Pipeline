@@ -47,10 +47,14 @@ def clean_data(df):
         categories[column] = categories[column].astype(str).str[-1].astype(int)
     df.drop("categories", axis=1, inplace=True)
 
+    df = pd.concat([df, categories], axis=1)
+
     # Drop duplicates
     df.drop_duplicates(inplace=True)
     # Create a new column for any data that doesn't have a label
     df["unrelated"] = (df.iloc[:, 4:].sum(axis=1) == 0).astype(int)
+    # Remove rows with the related label 2 (not translated or unfinished)
+    df = df[df["related"] != 2]
     return df
 
 
@@ -64,7 +68,7 @@ def save_data(df, database_filename):
         database_filename (str): Filename of the SQL database.
     """
     engine = create_engine("sqlite:///"+database_filename)
-    df.to_sql("DisasterResponse", engine, index=False)  
+    df.to_sql(database_filename[:-3], engine, index=False)
 
 
 def main():
@@ -79,12 +83,12 @@ def main():
 
         print("Cleaning data...")
         df = clean_data(df)
-        
+
         print(f"Saving data...\n    DATABASE: {database_filepath}")
         save_data(df, database_filepath)
-        
+
         print("Cleaned data saved to database!")
-    
+
     else:
         print("Please provide the filepaths of the messages and categories "
               "datasets as the first and second argument respectively, as "
