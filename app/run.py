@@ -1,33 +1,34 @@
 import json
 import plotly
 import pandas as pd
-import re
 import joblib
+import re
+import sys
+from collections import Counter
 
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
 
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
-from sqlalchemy import create_engine
-from collections import Counter
 
+from sqlalchemy import create_engine
+
+import nltk
+nltk.download(['stopwords'])
 
 app = Flask(__name__)
 
 
-def tokenize(text, use_stemming=True):
+def tokenize(text):
     """
-    Split text into words and return the stemmed&lemmatized or the lemmatized
+    Split text into words and return the or the lemmatized
     form of the words.
 
     Args:
         text (str): Disaster messages.
-        use_stemming (bool, optional): Setting whether stemming is used or not.
-            Defaults to True.
 
     Returns:
         clean_tokens (list of str): The input text broken into the original
@@ -44,17 +45,17 @@ def tokenize(text, use_stemming=True):
         clean_tok = lemmatizer.lemmatize(tok).strip()
         clean_tokens.append(clean_tok)
 
-    if use_stemming:
-        clean_tokens = [PorterStemmer().stem(w) for w in clean_tokens]
     return clean_tokens
 
 
 # load data
-engine = create_engine("sqlite:///..\\data\\DisasterResponse.db")
-df = pd.read_sql_table("DisasterResponse", engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+# Windows: 'sqlite:///..\\data\\DisasterResponse.db'
+df = pd.read_sql_table('DisasterResponse', engine)
 
 # load model
-model = joblib.load("..\\models\\classifier.pkl")
+model = joblib.load("../models/classifier.pkl")
+# Windows: "..\\models\\classifier.pkl"
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -71,16 +72,16 @@ def index():
     top_labels_names = list(top_labels.index)
 
     words = []
-    for message in df["message"]:
+    for message in df.sample(1000, random_state=0)["message"]:
         words.extend(tokenize(message)[:])
 
     words_counter = Counter(words)
     most_common = words_counter.most_common(7)
     most_common_words = []
     most_common_words_counts = []
-    for word, count in most_common:
+    for word, amount in most_common:
         most_common_words.append(word)
-        most_common_words_counts.append(count)
+        most_common_words_counts.append(amount)
 
     # create visuals
     graphs = [
@@ -129,7 +130,8 @@ def index():
             ],
 
             'layout': {
-                'title': 'Occurrence of the most common words',
+                'title': """Occurrence of the most common<br>
+                words in a random sample of 1000 messages""",
                 'yaxis': {
                     'title': "Occurrence"
                 },
@@ -152,13 +154,13 @@ def index():
 @app.route('/go')
 def go():
     # save user input in query
-    query = request.args.get('query', '')
+    query = request.args.get('query', '') 
 
     # use model to predict classification for query
     classification_labels = model.predict([query])[0]
     classification_results = dict(zip(df.columns[4:], classification_labels))
 
-    # This will render the go.html Please see that file.
+    # This will render the go.html Please see that file. 
     return render_template(
         'go.html',
         query=query,
@@ -168,7 +170,6 @@ def go():
 
 def main():
     app.run(host='0.0.0.0', port=3001, debug=True)
-
 
 if __name__ == '__main__':
     main()
