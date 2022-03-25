@@ -116,8 +116,7 @@ def save_model(model, model_filepath):
         model (sklearn Pipeline): The NLP classification Pipeline.
         model_filepath (str): Path of the pickel file.
     """
-    with open(model_filepath, 'wb') as file:
-        pickle.dump(model, file)
+    pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
