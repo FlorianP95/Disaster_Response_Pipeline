@@ -35,7 +35,7 @@ def load_data(database_filepath):
         y (Pandas DataFrame): Dataframe with the labels (categories).
     """
     engine = create_engine('sqlite:///'+database_filepath)
-    df = pd.read_sql("DisasterResponse", engine)
+    df = pd.read_sql("DisasterResponse.db", engine)
     X = df["message"]
     y = df.iloc[:, 4:]
     return X, y
