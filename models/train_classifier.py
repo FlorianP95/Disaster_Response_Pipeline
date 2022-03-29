@@ -14,6 +14,7 @@ from sklearn.multioutput import MultiOutputClassifier
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV
 
 from sqlalchemy import create_engine
 
@@ -78,14 +79,19 @@ def build_model():
     Returns:
         (sklearn Pipeline): Pipeline for NLP Classification tasks.
     """
-    classifier = RandomForestClassifier(bootstrap=False,
-                                        n_estimators=100)
+    classifier = RandomForestClassifier()
     pipeline = Pipeline([
         ("vect", CountVectorizer(tokenizer=tokenize)),
         ("tfidf", TfidfTransformer()),
         ("model", MultiOutputClassifier(classifier))
     ])
-    return pipeline
+
+    parameters = {
+        'tfidf__use_idf': (True, False),
+        'model__estimator__n_estimators': [50, 100],
+    }
+    cv = GridSearchCV(pipeline, param_grid=parameters)
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test,):
